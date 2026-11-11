@@ -1,139 +1,765 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Batalha Matemática</title>
-<style>
-:root{--bg:#071426;--card:#10243d;--cyan:#35d6e8;--purple:#8b70ff;--text:#f4f7ff;--muted:#a9bad0}
-*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at top,#173b62,#071426 65%);color:var(--text);font-family:system-ui,Arial,sans-serif;padding:20px}
-main{max-width:850px;margin:auto}.brand{text-align:center;margin:12px 0 24px}.brand h1{font-size:clamp(2rem,7vw,3.4rem);margin:0;color:var(--cyan);text-shadow:0 0 24px #35d6e855}.brand p{color:var(--muted)}
-.card{background:#10243deF;border:1px solid #355474;border-radius:20px;padding:22px;margin:14px 0;box-shadow:0 15px 40px #0005}
-h2{margin-top:0}input{width:100%;padding:14px;border-radius:12px;border:1px solid #55718f;background:#07182b;color:white;font-size:1rem;margin:8px 0 14px}
-button{border:0;border-radius:12px;padding:13px 18px;font-weight:800;font-size:1rem;cursor:pointer;background:linear-gradient(100deg,var(--cyan),#8bf2d7);color:#071426;margin:5px}
-button.alt{background:linear-gradient(100deg,#967cff,#c1a5ff)}button:disabled{opacity:.45;cursor:not-allowed}
-.actions{display:flex;gap:8px;flex-wrap:wrap}.hidden{display:none!important}.pin{font-size:2.4rem;letter-spacing:8px;color:var(--cyan);font-weight:900;text-align:center}
-.player{padding:10px;background:#183453;border-radius:10px;margin:7px 0;display:flex;justify-content:space-between;gap:8px}
-.question{font-size:1.35rem;font-weight:800;line-height:1.4}.answers{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}.answers button{min-height:66px;background:#244768;color:white;border:1px solid #52799b}.answers button:disabled{opacity:.65}
-.meta{display:flex;justify-content:space-between;gap:12px;color:var(--muted);flex-wrap:wrap}.notice{color:#ffd27a;min-height:24px}.good{color:#82f0b5}.bad{color:#ff9b9b}
-footer{text-align:center;color:var(--muted);font-size:.85rem;margin:25px}
-@media(max-width:520px){body{padding:12px}.card{padding:17px}.answers{grid-template-columns:1fr}.pin{font-size:2rem}}
-</style>
-</head>
-<body><main>
-<header class="brand"><h1>⚡ BATALHA MATEMÁTICA</h1><p>Entre com um PIN e desafie seus amigos!</p></header>
-<section id="home" class="card">
-<h2>🎮 Entrar na batalha</h2>
-<label>Seu nome</label><input id="playerName" maxlength="18" placeholder="Digite seu nome">
-<div class="actions"><button id="createBtn">Criar sala</button></div>
-<hr style="border-color:#355474;margin:20px 0">
-<label>PIN da sala</label><input id="pinInput" inputmode="numeric" maxlength="6" placeholder="Ex.: 482193">
-<button class="alt" id="joinBtn">Entrar com PIN</button>
-<p class="notice" id="homeMsg"></p>
-</section>
-<section id="lobby" class="card hidden">
-<h2>🏆 Sala de espera</h2><p>Compartilhe este PIN com seus amigos:</p><div class="pin" id="roomPin"></div>
-<p id="lobbyCount"></p><div id="lobbyPlayers"></div>
-<div class="actions"><button id="startBtn">Começar partida</button><button class="alt" id="leaveBtn">Sair da sala</button></div>
-<p class="notice" id="lobbyMsg">Aguardando o anfitrião iniciar...</p>
-</section>
-<section id="game" class="card hidden">
-<div class="meta"><span id="roundInfo">Pergunta 1</span><span>⏱ <b id="timer">20</b>s</span></div>
-<div style="height:9px;background:#29425c;border-radius:9px;margin:12px 0 20px"><div id="timeBar" style="height:100%;width:100%;background:var(--cyan);border-radius:9px"></div></div>
-<div class="question" id="questionText"></div><div class="answers" id="answerButtons"></div>
-<p class="notice" id="gameMsg"></p><h3>📊 Placar</h3><div id="gamePlayers"></div>
-<button id="nextBtn" class="hidden">Próxima pergunta</button>
-</section>
-<section id="result" class="card hidden"><h2>🏅 Resultado final</h2><div id="finalRanking"></div><button onclick="location.reload()">Voltar ao início</button></section>
-<footer>Protótipo educacional • Batalha Matemática</footer>
-</main>
+
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+
+<style>
+:root {
+  --bg:#071426;
+  --card:#10243d;
+  --card2:#172f4d;
+  --cyan:#35d6e8;
+  --purple:#8b70ff;
+  --green:#35d68a;
+  --red:#ff637d;
+  --text:#f4f7ff;
+  --muted:#a9b8d0;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  min-height:100vh;
+  padding:20px;
+  font-family:Arial,sans-serif;
+  background:radial-gradient(circle at top,#17385b,var(--bg) 65%);
+  color:var(--text);
+}
+.container{max-width:950px;margin:auto}
+header{text-align:center;margin:20px 0 30px}
+header h1{font-size:clamp(30px,6vw,48px);margin:0}
+header p{color:var(--muted)}
+.logo{font-size:45px;margin-bottom:8px}
+.card{
+  background:linear-gradient(145deg,var(--card),#0b1b30);
+  border:1px solid #294767;
+  border-radius:20px;
+  padding:22px;
+  margin-bottom:18px;
+  box-shadow:0 12px 35px #0005;
+}
+h2,h3{margin-top:0}
+input{
+  width:100%;
+  padding:14px;
+  border-radius:10px;
+  border:1px solid #45617e;
+  background:#071426;
+  color:white;
+  font-size:16px;
+  margin:7px 0 13px;
+}
+button{
+  border:0;
+  border-radius:11px;
+  padding:13px 18px;
+  font-size:15px;
+  font-weight:bold;
+  cursor:pointer;
+  transition:.2s;
+}
+button:hover{filter:brightness(1.15);transform:translateY(-2px)}
+button:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.primary{background:linear-gradient(90deg,var(--cyan),#5c9dff);color:#061526}
+.secondary{background:var(--purple);color:white}
+.success{background:var(--green);color:#062018}
+.danger{background:var(--red);color:#250711}
+.full{width:100%}
+.hidden{display:none!important}
+.muted{color:var(--muted)}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row>*{flex:1}
+.avatar-grid,.level-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:9px;
+  margin:12px 0;
+}
+.avatar{
+  background:#1b3655;
+  border:2px solid transparent;
+  font-size:27px;
+  padding:12px;
+}
+.avatar.selected{border-color:var(--cyan);background:#17465a}
+.level{
+  background:#1b3655;
+  border:2px solid transparent;
+  color:white;
+  min-height:80px;
+}
+.level.selected{border-color:var(--cyan);background:#17465a}
+.level small{display:block;color:#c3d5e9;margin-top:5px}
+.players{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+  gap:10px;
+}
+.player{
+  background:#1b3655;
+  padding:12px;
+  border-radius:12px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.player .face{font-size:27px}
+.player small{display:block;color:var(--muted)}
+.pin{
+  font-size:34px;
+  font-weight:bold;
+  letter-spacing:7px;
+  color:var(--cyan);
+  text-align:center;
+  padding:10px;
+}
+.status{
+  text-align:center;
+  color:var(--muted);
+  margin:10px 0;
+}
+.question{
+  font-size:clamp(20px,4vw,28px);
+  line-height:1.4;
+  margin:22px 0;
+}
+.answers{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.answer{
+  background:#1b3655;
+  color:white;
+  border:1px solid #416184;
+  min-height:65px;
+  text-align:left;
+}
+.answer:hover{background:#245078}
+.answer.selected{background:#245078;border:2px solid var(--cyan)}
+.answer:disabled{opacity:.65}
+.timer{
+  height:12px;
+  background:#263d58;
+  border-radius:20px;
+  overflow:hidden;
+  margin:15px 0;
+}
+.timer-bar{
+  height:100%;
+  width:100%;
+  background:linear-gradient(90deg,var(--green),var(--cyan));
+  transition:width .2s linear;
+}
+.timer-number{text-align:center;font-size:25px;font-weight:bold}
+.score{font-size:25px;color:var(--green);font-weight:bold}
+.notice{
+  background:#183a50;
+  border:1px solid #28718a;
+  border-radius:12px;
+  padding:12px;
+  margin:12px 0;
+  text-align:center;
+}
+.footer{text-align:center;color:var(--muted);font-size:12px;margin:25px}
+@media(max-width:550px){
+  body{padding:12px}
+  .card{padding:16px}
+  .answers{grid-template-columns:1fr}
+  .avatar-grid,.level-grid{grid-template-columns:repeat(4,1fr)}
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<header>
+  <div class="logo">⚔️</div>
+  <h1>BATALHA MATEMÁTICA</h1>
+  <p>Conhecimento, estratégia e competição!</p>
+</header>
+
+<section id="home" class="card">
+  <h2>🎮 Entrar na batalha</h2>
+
+  <label>Seu nome</label>
+  <input id="playerName" maxlength="18" placeholder="Digite seu nome">
+
+  <h3>Escolha seu avatar</h3>
+  <div class="avatar-grid" id="avatarGrid"></div>
+
+  <div class="row">
+    <button class="primary" onclick="createRoom()">Criar sala</button>
+    <button class="secondary" onclick="showJoin()">Entrar com PIN</button>
+  </div>
+
+  <div id="joinArea" class="hidden">
+    <h3>Entrar em uma sala</h3>
+    <input id="pinInput" maxlength="6" placeholder="Digite o PIN">
+    <button class="primary full" onclick="joinRoom()">Entrar na partida</button>
+  </div>
+
+  <p id="homeMessage" class="status"></p>
+</section>
+
+<section id="lobby" class="hidden">
+  <div class="card">
+    <h2>🏠 Sala de espera</h2>
+    <p class="muted">Compartilhe o PIN com seus amigos:</p>
+    <div class="pin" id="roomPin"></div>
+    <p class="status" id="playerCount"></p>
+
+    <h3>👥 Jogadores conectados</h3>
+    <div id="playersList" class="players"></div>
+  </div>
+
+  <div class="card" id="hostControls">
+    <h2>⚙️ Configurações da partida</h2>
+    <p>Escolha o nível de dificuldade:</p>
+
+    <div class="level-grid">
+      <button class="level selected" data-level="1" onclick="selectLevel(1)">
+        🟢 Nível 1
+        <small>Iniciante</small>
+      </button>
+      <button class="level" data-level="2" onclick="selectLevel(2)">
+        🔵 Nível 2
+        <small>Fácil</small>
+      </button>
+      <button class="level" data-level="3" onclick="selectLevel(3)">
+        🟣 Nível 3
+        <small>Intermediário</small>
+      </button>
+      <button class="level" data-level="4" onclick="selectLevel(4)">
+        🔴 Nível 4
+        <small>Avançado</small>
+      </button>
+    </div>
+
+    <button class="success full" onclick="startGame()">🚀 Iniciar partida</button>
+  </div>
+
+  <div class="card hidden" id="waitingHost">
+    <p class="status">Aguardando o anfitrião iniciar a partida...</p>
+  </div>
+</section>
+
+<section id="game" class="hidden">
+  <div class="card">
+    <div class="row">
+      <div>
+        <p class="muted">QUESTÃO</p>
+        <h3 id="questionNumber">1 / 10</h3>
+      </div>
+      <div>
+        <p class="muted">PONTUAÇÃO</p>
+        <div class="score" id="myScore">0</div>
+      </div>
+    </div>
+
+    <div class="timer-number" id="timerNumber">20</div>
+    <div class="timer"><div class="timer-bar" id="timerBar"></div></div>
+
+    <div class="question" id="questionText"></div>
+    <div class="answers" id="answers"></div>
+
+    <div class="notice" id="answerStatus">Escolha sua resposta!</div>
+    <div class="notice" id="hostProgress"></div>
+
+    <button id="nextButton" class="primary full hidden" onclick="advance()">
+      Próxima pergunta ➜
+    </button>
+  </div>
+</section>
+
+<section id="results" class="hidden">
+  <div class="card">
+    <h2>🏆 Resultado da batalha</h2>
+    <p class="status">Classificação final</p>
+    <div id="finalRanking"></div>
+    <button class="primary full" onclick="location.reload()">Voltar ao início</button>
+  </div>
+</section>
+
+<div class="footer">Batalha Matemática • Engenharia Florestal e Matemática</div>
+</div>
+
 <script>
-const firebaseConfig={
- apiKey:"AIzaSyAakf_54XSCQijFp4bjDXiiFwV6PSZwJfQ",
- authDomain:"batalhamatematica-16322.firebaseapp.com",
- databaseURL:"https://batalhamatematica-16322-default-rtdb.firebaseio.com",
- projectId:"batalhamatematica-16322",
- storageBucket:"batalhamatematica-16322.firebasestorage.app",
- messagingSenderId:"48762205432",
- appId:"1:48762205432:web:141f27085374d67892b70d"
+const firebaseConfig = {
+  apiKey:"AIzaSyAakf_54XSCQijFp4bjDXiiFwV6PSZwJfQ",
+  authDomain:"batalhamatematica-16322.firebaseapp.com",
+  databaseURL:"https://batalhamatematica-16322-default-rtdb.firebaseio.com",
+  projectId:"batalhamatematica-16322",
+  storageBucket:"batalhamatematica-16322.firebasestorage.app",
+  messagingSenderId:"48762205432",
+  appId:"1:48762205432:web:141f27085374d67892b70d"
 };
+
 firebase.initializeApp(firebaseConfig);
-const auth=firebase.auth(), db=firebase.database();
-const $=id=>document.getElementById(id);
-const questions=[
-{q:"Qual é o limite de x + 2 quando x tende a 3?",a:["3","5","6","2"],c:1},
-{q:"Qual é a derivada de f(x) = x²?",a:["x","2x","x²","2"],c:1},
-{q:"Quanto vale lim (2x + 1), quando x → 2?",a:["3","4","5","6"],c:2},
-{q:"Qual é a derivada de f(x) = 5x?",a:["5","x","5x","0"],c:0},
-{q:"Qual é a derivada de uma constante?",a:["1","A própria constante","0","x"],c:2},
-{q:"Quanto vale 3² + 1?",a:["7","9","10","12"],c:2},
-{q:"A derivada de x³ é:",a:["3x²","x²","3x","x⁴"],c:0},
-{q:"Qual é o limite de x² quando x → 4?",a:["8","12","16","4"],c:2},
-{q:"A inclinação da reta y = 2x + 3 é:",a:["3","2","5","1"],c:1},
-{q:"A derivada de f(x) = x é:",a:["0","x","1","2x"],c:2}
+const auth=firebase.auth();
+const db=firebase.database();
+
+let uid=null;
+let pin=null;
+let roomData=null;
+let isHost=false;
+let selectedAvatar="🦊";
+let selectedLevel=1;
+let localTimer=null;
+let lastRenderedIndex=-1;
+let currentAnswered=false;
+
+const avatars=[
+  "🦊","🐺","🦁","🐯","🐸","🐼","🐵","🐲",
+  "🦅","🐻","🐨","🐰","🐙","🦉","🐬","🐢"
 ];
-let uid=null,room=null,pin=null,isHost=false,unsub=null,localTimer=null,remaining=20,answered=false,roomData=null;
-function show(id){["home","lobby","game","result"].forEach(x=>$(x).classList.toggle("hidden",x!==id))}
-function msg(id,t,cls=""){ $(id).textContent=t;$(id).className="notice "+cls}
-function cleanName(){return $("playerName").value.trim().slice(0,18)}
-function randomPin(){return String(Math.floor(100000+Math.random()*900000))}
-function shuffle(a){return [...a].sort(()=>Math.random()-.5)}
-async function ensureAuth(){if(!auth.currentUser)await auth.signInAnonymously();uid=auth.currentUser.uid}
-function roomRef(){return db.ref("salas/"+pin)}
+
+const bank={
+1:[
+["Quanto é 5 + 7?",["10","11","12","13"],2],
+["Quanto é 10 × 2?",["10","15","20","25"],2],
+["Quanto é 20 ÷ 4?",["4","5","6","8"],1],
+["Qual é o resultado de 9 - 3?",["5","6","7","8"],1],
+["Quantos lados tem um triângulo?",["2","3","4","5"],1],
+["Qual é a metade de 100?",["25","40","50","60"],2],
+["Qual é o dobro de 15?",["20","25","30","35"],2],
+["Quanto é 8 × 3?",["18","21","24","27"],2],
+["Quantos metros existem em 1 quilômetro?",["100","500","1000","1500"],2],
+["Qual é o principal pigmento verde das plantas?",["Clorofila","Amido","Celulose","Glicose"],0],
+["Qual estrutura absorve água no solo?",["Flor","Raiz","Fruto","Semente"],1],
+["Qual bioma ocupa grande parte da região Norte do Brasil?",["Caatinga","Pampa","Amazônia","Cerrado"],2],
+["O que é biodiversidade?",["Variedade de vida","Tipo de solo","Clima seco","Área urbana"],0],
+["Qual parte da planta realiza principalmente a fotossíntese?",["Raiz","Folha","Fruto","Semente"],1],
+["O que é reflorestamento?",["Retirada de árvores","Plantio de árvores","Queimada","Construção urbana"],1]
+],
+2:[
+["Quanto é 12 × 8?",["86","92","96","108"],2],
+["Quanto é 144 ÷ 12?",["10","11","12","14"],2],
+["Qual é a área de um quadrado de lado 5 m?",["10 m²","20 m²","25 m²","30 m²"],2],
+["Quanto é 15% de 200?",["15","20","30","40"],2],
+["Qual é a raiz quadrada de 81?",["7","8","9","10"],2],
+["Uma área de 2 hectares equivale a quantos m²?",["2000","10000","20000","200000"],2],
+["Qual instrumento é usado para medir o diâmetro de uma árvore?",["Bússola","Suta","Termômetro","Pluviômetro"],1],
+["O que é uma espécie nativa?",["Originária de uma região","Sempre exótica","Doméstica","Artificial"],0],
+["Qual é a função principal das raízes?",["Produzir flores","Absorver água e nutrientes","Produzir frutos","Atrair polinizadores"],1],
+["O que é erosão do solo?",["Formação de folhas","Desgaste e transporte do solo","Crescimento de raízes","Aumento da biodiversidade"],1],
+["Qual fator é essencial à fotossíntese?",["Luz","Areia","Vento forte","Sal"],0],
+["Quanto é 25 × 4?",["50","75","100","125"],2],
+["Qual é o perímetro de um quadrado de lado 6 m?",["12 m","18 m","24 m","36 m"],2],
+["Qual é o resultado de 3²?",["6","8","9","12"],2],
+["O que é uma bacia hidrográfica?",["Área drenada por um sistema de rios","Um tipo de floresta","Uma espécie de árvore","Um tipo de rocha"],0]
+],
+3:[
+["Qual é a área de um círculo de raio 2 m? (Use π = 3,14)",["6,28 m²","12,56 m²","15,70 m²","18,84 m²"],1],
+["Se uma árvore cresce 2 m por ano, quanto cresce em 5 anos?",["5 m","7 m","10 m","12 m"],2],
+["Qual é a média de 6, 8 e 10?",["7","8","9","10"],1],
+["Uma área de 3 ha equivale a:",["300 m²","3000 m²","30000 m²","300000 m²"],2],
+["Qual é o volume de um bloco de 2 m × 3 m × 4 m?",["9 m³","12 m³","18 m³","24 m³"],3],
+["Qual processo devolve vapor de água à atmosfera pelas plantas?",["Transpiração","Erosão","Germinação","Polinização"],0],
+["O que caracteriza uma floresta secundária?",["Vegetação em regeneração","Ausência total de plantas","Área sempre alagada","Plantio exclusivamente agrícola"],0],
+["Qual é a função da serapilheira?",["Cobrir o solo com matéria orgânica","Aumentar a erosão","Impedir a decomposição","Eliminar nutrientes"],0],
+["O que é sucessão ecológica?",["Mudança gradual das comunidades","Desmatamento total","Contaminação da água","Formação de rochas"],0],
+["Qual indicador ajuda a avaliar a diversidade de espécies?",["Índice de diversidade","Temperatura do motor","Velocidade do vento","Pressão atmosférica"],0],
+["Se 4 trabalhadores plantam 200 mudas, quantas mudas cada um plantou em média?",["25","40","50","100"],2],
+["Qual é 20% de 350?",["50","60","70","80"],2],
+["Qual é o resultado de 2³ × 3?",["12","18","24","30"],2],
+["Qual é a unidade comum de volume de madeira?",["m²","m³","kg/m²","km"],1],
+["O que é manejo florestal sustentável?",["Uso planejado com conservação da floresta","Corte sem planejamento","Queimada anual","Retirada de toda vegetação"],0]
+],
+4:[
+["Uma parcela tem 20 m × 25 m. Qual sua área em hectares?",["0,05 ha","0,5 ha","5 ha","50 ha"],0],
+["Uma árvore tem DAP de 40 cm. Qual é o raio correspondente?",["10 cm","20 cm","30 cm","40 cm"],1],
+["Qual é o volume de um cilindro de raio 1 m e altura 5 m? (π = 3,14)",["5,14 m³","10,00 m³","15,70 m³","31,40 m³"],2],
+["Uma população passou de 100 para 125 indivíduos. Qual foi o aumento percentual?",["15%","20%","25%","30%"],2],
+["Qual é a derivada de f(x) = 3x²?",["3x","6x","6x²","9x"],1],
+["Qual é a integral de 2x?",["x² + C","2x² + C","x + C","2 + C"],0],
+["Qual processo aumenta a fragmentação de habitats?",["Conexão de corredores","Expansão desordenada de áreas abertas","Regeneração natural","Restauração ecológica"],1],
+["O que representa o DAP em inventário florestal?",["Diâmetro à altura do peito","Densidade anual de precipitação","Distância entre árvores","Diâmetro da copa"],0],
+["Qual é a principal finalidade de um inventário florestal?",["Caracterizar e quantificar recursos florestais","Medir apenas a temperatura","Eliminar espécies nativas","Substituir o manejo"],0],
+["Qual medida ajuda a reduzir o impacto da exploração florestal?",["Planejamento de estradas e corte","Corte sem seleção","Retirada de toda a vegetação","Descarte de resíduos nos rios"],0],
+["Se 1 m³ de madeira pesa 600 kg, quanto pesam 2,5 m³?",["900 kg","1200 kg","1500 kg","1800 kg"],2],
+["Uma floresta tem 80 árvores por hectare em 5 hectares. Quantas árvores existem?",["200","300","400","500"],2],
+["Qual é a derivada de f(x) = x³?",["x²","2x","3x²","3x"],2],
+["Se uma área de 12 ha foi dividida em 4 partes iguais, cada parte possui:",["2 ha","3 ha","4 ha","6 ha"],1],
+["Qual prática contribui para a conservação do solo?",["Manter cobertura vegetal","Retirar toda a serapilheira","Aumentar queimadas","Deixar o solo exposto"],0]
+]
+};
+
+function $(id){return document.getElementById(id)}
+function show(id){
+  ["home","lobby","game","results"].forEach(x=>$(x).classList.add("hidden"));
+  $(id).classList.remove("hidden");
+}
+
+function showJoin(){
+  $("joinArea").classList.toggle("hidden");
+}
+
+function renderAvatars(){
+  $("avatarGrid").innerHTML=avatars.map(a=>
+    `<button class="avatar ${a===selectedAvatar?"selected":""}" onclick="chooseAvatar('${a}')">${a}</button>`
+  ).join("");
+}
+
+function chooseAvatar(a){
+  selectedAvatar=a;
+  renderAvatars();
+}
+
+function selectLevel(n){
+  selectedLevel=n;
+  document.querySelectorAll(".level").forEach(b=>{
+    b.classList.toggle("selected",Number(b.dataset.level)===n);
+  });
+}
+
+renderAvatars();
+
+auth.signInAnonymously().then(credential=>{
+  uid=credential.user.uid;
+}).catch(error=>{
+  $("homeMessage").textContent="Erro de conexão: "+error.message;
+});
+
+function getName(){
+  return $("playerName").value.trim()||"Jogador";
+}
+
+function makePin(){
+  return String(Math.floor(100000+Math.random()*900000));
+}
+
 async function createRoom(){
- const name=cleanName();if(!name){msg("homeMsg","Digite seu nome primeiro.");return}
- try{await ensureAuth();let p=randomPin();let ref=db.ref("salas/"+p);
- await ref.set({host:uid,status:"lobby",createdAt:Date.now(),players:{[uid]:{name,score:0,streak:0}},deck:shuffle(questions).map((q)=>q),index:0,deadline:0});
- pin=p;isHost=true;enterRoom();}catch(e){msg("homeMsg","Não foi possível criar: "+e.message)}
+  if(!uid){alert("Aguarde a conexão com o servidor.");return}
+  const name=getName();
+  let newPin=makePin();
+  let ref=db.ref("salas/"+newPin);
+  let snapshot=await ref.once("value");
+
+  while(snapshot.exists()){
+    newPin=makePin();
+    ref=db.ref("salas/"+newPin);
+    snapshot=await ref.once("value");
+  }
+
+  pin=newPin;
+  const room={
+    host:uid,
+    status:"lobby",
+    createdAt:Date.now(),
+    level:1,
+    players:{
+      [uid]:{
+        name,
+        avatar:selectedAvatar,
+        score:0,
+        streak:0,
+        answers:{}
+      }
+    },
+    deck:[],
+    index:0,
+    deadline:0
+  };
+
+  await ref.set(room);
+  subscribe();
 }
+
 async function joinRoom(){
- const name=cleanName(),p=$("pinInput").value.trim();if(!name){msg("homeMsg","Digite seu nome primeiro.");return}
- if(!/^\d{6}$/.test(p)){msg("homeMsg","Digite um PIN de 6 números.");return}
- try{await ensureAuth();pin=p;const ref=roomRef();let joined=false;
- await ref.child("players").transaction(players=>{players=players||{};if(players[uid]){joined=true;return players}if(Object.keys(players).length>=10)return;players[uid]={name,score:0,streak:0};joined=true;return players;});
- const snap=await ref.get();if(!snap.exists()){msg("homeMsg","Sala não encontrada.");return}
- if(!joined){msg("homeMsg","A sala já tem 10 jogadores.");return}
- isHost=snap.val().host===uid;enterRoom();
- }catch(e){msg("homeMsg","Erro ao entrar: "+e.message)}
+  if(!uid){alert("Aguarde a conexão.");return}
+  const code=$("pinInput").value.trim();
+
+  if(!/^\d{6}$/.test(code)){
+    alert("Digite um PIN válido de 6 números.");
+    return;
+  }
+
+  const ref=db.ref("salas/"+code);
+  const snapshot=await ref.once("value");
+
+  if(!snapshot.exists()){
+    alert("Sala não encontrada.");
+    return;
+  }
+
+  const room=snapshot.val();
+
+  if(room.status!=="lobby" && !room.players?.[uid]){
+    alert("Essa partida já começou.");
+    return;
+  }
+
+  if(!room.players?.[uid]){
+    const result=await ref.transaction(data=>{
+      if(!data || data.status!=="lobby")return;
+      data.players=data.players||{};
+      if(Object.keys(data.players).length>=40)return;
+      data.players[uid]={
+        name:getName(),
+        avatar:selectedAvatar,
+        score:0,
+        streak:0,
+        answers:{}
+      };
+      return data;
+    });
+
+    if(!result.committed){
+      alert("Sala cheia ou partida já iniciada.");
+      return;
+    }
+  }
+
+  pin=code;
+  subscribe();
 }
-function enterRoom(){show("lobby");$("roomPin").textContent=pin;subscribe();if(isHost)$("startBtn").classList.remove("hidden");else $("startBtn").classList.add("hidden")}
+
 function subscribe(){
- if(unsub)unsub();const ref=roomRef();const handler=s=>{if(!s.exists()){msg("lobbyMsg","A sala foi encerrada.");return}roomData=s.val();renderPlayers();if(roomData.status==="playing"&&$("game").classList.contains("hidden")){show("game");renderQuestion()}else if(roomData.status==="playing"){renderQuestion()}else if(roomData.status==="finished"){renderFinal()}};
- ref.on("value",handler);unsub=()=>ref.off("value",handler);
+  const ref=db.ref("salas/"+pin);
+  ref.on("value",snapshot=>{
+    if(!snapshot.exists()){
+      alert("A sala foi encerrada.");
+      location.reload();
+      return;
+    }
+
+    roomData=snapshot.val();
+    isHost=roomData.host===uid;
+
+    if(roomData.status==="lobby"){
+      renderLobby();
+    }else if(roomData.status==="playing"){
+      renderQuestion();
+    }else if(roomData.status==="finished"){
+      renderFinal();
+    }
+  });
+
+  show("lobby");
 }
-function renderPlayers(){
- const players=Object.entries(roomData.players||{}).sort((a,b)=>(b[1].score||0)-(a[1].score||0));
- $("lobbyCount").textContent=players.length+"/10 jogadores";
- $("lobbyPlayers").innerHTML=players.map(([id,p],i)=>`<div class="player"><span>${i+1}. ${esc(p.name)} ${id===roomData.host?"👑":""}</span><b>${p.score||0} pts</b></div>`).join("");
- $("gamePlayers").innerHTML=players.map(([id,p],i)=>`<div class="player"><span>${i+1}. ${esc(p.name)}</span><b>${p.score||0} pts</b></div>`).join("");
+
+function renderLobby(){
+  show("lobby");
+  $("roomPin").textContent=pin;
+
+  const players=Object.values(roomData.players||{});
+  $("playerCount").textContent=players.length+" / 40 jogadores";
+
+  $("playersList").innerHTML=players.map(p=>`
+    <div class="player">
+      <span class="face">${p.avatar||"🙂"}</span>
+      <div>${escapeHTML(p.name)}
+      <small>${p.name===roomData.players[roomData.host]?.name?"Participante": "Jogador"}</small></div>
+    </div>
+  `).join("");
+
+  $("hostControls").classList.toggle("hidden",!isHost);
+  $("waitingHost").classList.toggle("hidden",isHost);
 }
-function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
-async function startGame(){const deck=shuffle(questions);await roomRef().update({status:"playing",deck,index:0,deadline:Date.now()+20000});}
+
+function escapeHTML(value){
+  return String(value).replace(/[&<>"']/g,c=>({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[c]));
+}
+
+function makeDeck(level){
+  const questions=[...bank[level]];
+  for(let i=questions.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [questions[i],questions[j]]=[questions[j],questions[i]];
+  }
+
+  return questions.slice(0,10).map((q,i)=>({
+    id:i,
+    q:q[0],
+    a:q[1],
+    c:q[2]
+  }));
+}
+
+async function startGame(){
+  if(!isHost || !roomData)return;
+
+  const deck=makeDeck(selectedLevel);
+  const updates={
+    status:"playing",
+    level:selectedLevel,
+    deck,
+    index:0,
+    deadline:Date.now()+20000
+  };
+
+  Object.keys(roomData.players).forEach(id=>{
+    updates["players/"+id+"/score"]=0;
+    updates["players/"+id+"/streak"]=0;
+    updates["players/"+id+"/answers"]={};
+  });
+
+  await db.ref("salas/"+pin).update(updates);
+}
+
 function renderQuestion(){
- if(!roomData||roomData.status!=="playing")return;const idx=roomData.index||0,q=(roomData.deck||questions)[idx];
- if(!q){if(isHost)roomRef().update({status:"finished"});return}
- $("roundInfo").textContent=`Pergunta ${idx+1} de ${roomData.deck.length}`;
- $("questionText").textContent=q.q;
- $("answerButtons").innerHTML=q.a.map((a,i)=>`<button data-i="${i}" ${roomData.players[uid]?.answers?.[idx]!==undefined?"disabled":""}>${esc(a)}</button>`).join("");
- [...$("answerButtons").querySelectorAll("button")].forEach(b=>b.onclick=()=>answer(Number(b.dataset.i)));
- answered=roomData.players[uid]?.answers?.[idx]!==undefined;
- if(answered)msg("gameMsg","Resposta registrada! Aguarde a próxima pergunta.","good");else msg("gameMsg","Escolha uma alternativa.");
- startTimer(roomData.deadline||Date.now()+20000);renderPlayers();
- if(isHost)$("nextBtn").classList.remove("hidden");else $("nextBtn").classList.add("hidden");
+  show("game");
+
+  const index=roomData.index||0;
+  const q=roomData.deck[index];
+
+  if(!q)return;
+
+  $("questionNumber").textContent=(index+1)+" / 10";
+  $("questionText").textContent=q.q;
+
+  const me=roomData.players[uid];
+  currentAnswered=me?.answers?.[index]!==undefined;
+
+  $("myScore").textContent=me?.score||0;
+
+  $("answers").innerHTML=q.a.map((a,i)=>`
+    <button class="answer" ${currentAnswered?"disabled":""}
+      onclick="answer(${i})">${String.fromCharCode(65+i)}. ${escapeHTML(a)}</button>
+  `).join("");
+
+  $("answerStatus").textContent=currentAnswered
+    ?"Resposta registrada! Aguarde os outros jogadores."
+    :"Escolha sua resposta!";
+
+  $("nextButton").classList.toggle("hidden",!isHost);
+
+  if(lastRenderedIndex!==index){
+    lastRenderedIndex=index;
+    startTimer(roomData.deadline);
+  }
+
+  updateAnswerProgress();
 }
-function startTimer(deadline){clearInterval(localTimer);function tick(){remaining=Math.max(0,Math.ceil((deadline-Date.now())/1000));$("timer").textContent=remaining;$("timeBar").style.width=(remaining/20*100)+"%";if(remaining<=0){clearInterval(localTimer);if(isHost)advance();}}tick();localTimer=setInterval(tick,250)}
-async function answer(i){
- if(answered)return;answered=true;[...$("answerButtons").querySelectorAll("button")].forEach(b=>b.disabled=true);
- const idx=roomData.index,q=roomData.deck[idx],correct=i===q.c;
- const updates={};updates[`players/${uid}/answers/${idx}`]=i;
- if(correct){const p=roomData.players[uid]||{};const streak=(p.streak||0)+1;updates[`players/${uid}/score`]=(p.score||0)+10+(streak%3===0?5:0);updates[`players/${uid}/streak`]=streak;}
- else updates[`players/${uid}/streak`]=0;
- try{await roomRef().update(updates);msg("gameMsg",correct?"Resposta correta! + pontos":"Resposta registrada. Boa sorte na próxima!",correct?"good":"");}catch(e){msg("gameMsg","Erro ao enviar resposta: "+e.message)}
+
+function updateAnswerProgress(){
+  if(!roomData)return;
+
+  const players=Object.values(roomData.players||{});
+  const index=roomData.index||0;
+  const count=players.filter(p=>p.answers && p.answers[index]!==undefined).length;
+  const total=players.length;
+
+  if(isHost){
+    $("hostProgress").textContent=count===total
+      ?"🎉 Todos responderam! Você pode avançar."
+      :`📊 Respostas recebidas: ${count}/${total}`;
+  }else{
+    $("hostProgress").textContent=`📊 Jogadores que responderam: ${count}/${total}`;
+  }
 }
-async function advance(){if(!isHost)return;const next=(roomData.index||0)+1;if(next>=roomData.deck.length){await roomRef().update({status:"finished"});return}await roomRef().update({index:next,deadline:Date.now()+20000});}
-function renderFinal(){clearInterval(localTimer);show("result");const players=Object.values(roomData.players||{}).sort((a,b)=>(b.score||0)-(a.score||0));$("finalRanking").innerHTML=players.map((p,i)=>`<div class="player"><span>${["🥇","🥈","🥉"][i]||`${i+1}.`} ${esc(p.name)}</span><b>${p.score||0} pts</b></div>`).join("")}
-async function leave(){clearInterval(localTimer);if(pin&&uid){try{await roomRef().child("players/"+uid).remove()}catch(e){}}if(unsub)unsub();location.reload()}
-$("createBtn").onclick=createRoom;$("joinBtn").onclick=joinRoom;$("startBtn").onclick=startGame;$("nextBtn").onclick=advance;$("leaveBtn").onclick=leave;
-</script></body></html>
+
+function startTimer(deadline){
+  clearInterval(localTimer);
+
+  function tick(){
+    const remaining=Math.max(0,Math.ceil((deadline-Date.now())/1000));
+    $("timerNumber").textContent=remaining;
+    $("timerBar").style.width=(remaining/20*100)+"%";
+
+    if(remaining<=0){
+      clearInterval(localTimer);
+      $("answerStatus").textContent="⏰ Tempo esgotado!";
+
+      document.querySelectorAll(".answer").forEach(b=>b.disabled=true);
+
+      if(isHost){
+        setTimeout(()=>{
+          if(roomData?.status==="playing" && roomData.index===lastRenderedIndex){
+            advance();
+          }
+        },600);
+      }
+    }
+  }
+
+  tick();
+  localTimer=setInterval(tick,250);
+}
+
+async function answer(choice){
+  if(currentAnswered || !roomData || roomData.status!=="playing")return;
+  if(Date.now()>roomData.deadline)return;
+
+  const index=roomData.index;
+  const q=roomData.deck[index];
+  const correct=choice===q.c;
+  const me=roomData.players[uid];
+
+  if(!me)return;
+
+  const newStreak=correct?(me.streak||0)+1:0;
+  const points=correct?10+(newStreak%3===0?5:0):0;
+
+  const updates={};
+  updates["players/"+uid+"/answers/"+index]={
+    choice,
+    correct,
+    time:Date.now()
+  };
+  updates["players/"+uid+"/score"]=(me.score||0)+points;
+  updates["players/"+uid+"/streak"]=newStreak;
+
+  currentAnswered=true;
+  await db.ref("salas/"+pin).update(updates);
+
+  $("answerStatus").textContent=correct
+    ?"✅ Resposta correta! +"+points+" pontos"
+    :"❌ Não foi dessa vez. Aguarde a próxima pergunta.";
+
+  document.querySelectorAll(".answer").forEach((b,i)=>{
+    b.disabled=true;
+    if(i===choice)b.classList.add("selected");
+  });
+}
+
+async function advance(){
+  if(!isHost || !roomData || roomData.status!=="playing")return;
+
+  clearInterval(localTimer);
+
+  const next=(roomData.index||0)+1;
+
+  if(next>=10){
+    await db.ref("salas/"+pin).update({
+      status:"finished"
+    });
+  }else{
+    lastRenderedIndex=-1;
+    await db.ref("salas/"+pin).update({
+      index:next,
+      deadline:Date.now()+20000
+    });
+  }
+}
+
+function renderFinal(){
+  clearInterval(localTimer);
+  show("results");
+
+  const players=Object.entries(roomData.players||{})
+    .map(([id,p])=>({id,...p}))
+    .sort((a,b)=>(b.score||0)-(a.score||0));
+
+  const medals=["🥇","🥈","🥉"];
+
+  $("finalRanking").innerHTML=players.map((p,i)=>`
+    <div class="player" style="margin:8px 0">
+      <span class="face">${medals[i]||"🏅"}</span>
+      <span>${p.avatar||"🙂"} ${escapeHTML(p.name)}</span>
+      <strong style="margin-left:auto">${p.score||0} pts</strong>
+    </div>
+  `).join("");
+}
+
+window.addEventListener("beforeunload",()=>{
+  clearInterval(localTimer);
+});
+</script>
+</body>
+</html>
